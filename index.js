@@ -111,7 +111,7 @@ app.patch("/products/:id", async (req, res) => {
   if (product.available_quantity < quantity) {
     return res
       .status(400)
-      .send({ error: "Not enough stock available to import" });
+      .send({ error: "Not enough stock available" });
   }
 
   // Reduce available quantity safely
