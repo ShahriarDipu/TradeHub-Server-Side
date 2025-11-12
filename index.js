@@ -91,27 +91,42 @@ app.get('/latest-products', async(req,res)=>{
 
 
 //update products
-  app.patch('/products/:id' , async(req,res)=>{
-     const id = req.params.id;
-     const updatedNewProduct= req.body;// storing the changed data by client in a variable
-     const findMatchId = {_id:new ObjectId(id)}
 
+app.patch("/products/:id", async (req, res) => {
+  const id = req.params.id;
+  let { quantity } = req.body;
 
- const setUpdate ={
-//    $set:updatedNewProduct. // update full file or
-  $set:{
-    name:updatedNewProduct.name,
-    price:updatedNewProduct.price,
-    color:updatedNewProduct.color,
+  quantity = parseInt(quantity);
+  if (isNaN(quantity) || quantity <= 0) {
+    return res.status(400).send({ error: "Invalid quantity" });
   }
 
- }
+  // Fetch current product first
+  const product = await productCollection.findOne({ _id: new ObjectId(id) });
 
-const result = await productCollection.updateOne(findMatchId, setUpdate)
-res.send(result)
+  if (!product) {
+    return res.status(404).send({ error: "Product not found" });
+  }
+
+  if (product.available_quantity < quantity) {
+    return res
+      .status(400)
+      .send({ error: "Not enough stock available to import" });
+  }
+
+  // Reduce available quantity safely
+  const result = await productCollection.updateOne(
+    { _id: new ObjectId(id) },
+    { $inc: { available_quantity: -quantity } }
+  );
+
+  res.send(result);
+});
 
 
-  })
+
+
+
 
 
    //Delete Products
@@ -140,16 +155,12 @@ app.post("/imports", async (req, res) => {
   res.send(result);
 });
 
-//Add a path to reduce quantity
-app.patch("/products/:id", async (req, res) => {
-  const id = req.params.id;
-  const { quantity } = req.body;
-  const result = await productCollection.updateOne(
-    { _id: new ObjectId(id) },
-    { $inc: { available_quantity: -quantity } } // reduce quantity
-  );
-  res.send(result);
-});
+
+
+
+
+
+
 
 // Delete import product by ID
 app.delete("/imports/:id", async (req, res) => {
