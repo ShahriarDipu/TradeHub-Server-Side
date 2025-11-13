@@ -42,30 +42,22 @@ async function run() {
 
 
 
-    
 
-
-///Get all Products
-// app.get('/products', async(req,res)=>{
-
-//     const email = req.query.email;
-
-//     const query={} ///if there is email set a property value of email
-
-//         if (email){
-//             query.email= email
-//         }
-    
-
-//     const findAll = productCollection.find(query);
-//     const result = await findAll.toArray();
-//     res.send(result)
-// })
 
 app.get('/products', async (req, res) => {
   const email = req.query.email;
+
+  // If an email is provided, filter by that email.
+  // Otherwise, return all products.
   const query = email ? { email } : {};
-  const products = await productCollection.find(query).sort({ createdAt: -1 }).toArray();
+
+  // Fetch products from the database,
+  // newest ones first (sorted by createdAt)
+  const products = await productCollection
+    .find(query)
+    .sort({ createdAt: -1 })
+    .toArray();
+
   res.send(products);
 });
 
@@ -101,46 +93,13 @@ app.get('/latest-products', async(req,res)=>{
    })
 
 
-//update products
-
-// app.patch("/products/:id", async (req, res) => {
-//   const id = req.params.id;
-//   let { quantity } = req.body;
-
-//   quantity = parseInt(quantity);
-//   if (isNaN(quantity) || quantity <= 0) {
-//     return res.status(400).send({ error: "Invalid quantity" });
-//   }
-
-//   // Fetch current product first
-//   const product = await productCollection.findOne({ _id: new ObjectId(id) });
-
-//   if (!product) {
-//     return res.status(404).send({ error: "Product not found" });
-//   }
-
-//   if (product.available_quantity < quantity) {
-//     return res
-//       .status(400)
-//       .send({ error: "Not enough stock available" });
-//   }
-
-//   // Reduce available quantity safely
-//   const result = await productCollection.updateOne(
-//     { _id: new ObjectId(id) },
-//     { $inc: { available_quantity: -quantity } }
-//   );
-
-//   res.send(result);
-// });
-
 
 app.patch("/products/:id", async (req, res) => {
   const id = req.params.id;
   const updateData = req.body; // can contain either quantity or other fields
 
   try {
-    // 🧠 Case 1: Reduce quantity during import
+    //  Case 1: Reduce quantity during import
     if (updateData.quantity !== undefined) {
       let quantity = parseInt(updateData.quantity);
 
@@ -184,7 +143,7 @@ app.patch("/products/:id", async (req, res) => {
       updatedProduct,
     });
   } catch (error) {
-    console.error("❌ Error updating product:", error);
+    console.error("Error updating product:", error);
     res.status(500).send({ error: "Internal server error" });
   }
 });
@@ -205,11 +164,7 @@ app.patch("/products/:id", async (req, res) => {
 
 })
 
-
-// app.get("/imports", async (req, res) => {
-//   const result = await importsCollection.find().toArray();
-//   res.send(result);
-// });
+//Import 
 
 app.get("/imports", async (req, res) => {
   const email = req.query.email;
