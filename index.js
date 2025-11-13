@@ -156,44 +156,21 @@ app.patch("/products/:id", async (req, res) => {
 
 //Import 
 
-// Get all imported products (with optional email filter)
 app.get("/imports", async (req, res) => {
-  try {
-    const email = req.query.email;
-
-    // If email exists → filter by email, else → return all
-    const query = email ? { email } : {};
-
-    const result = await importsCollection
-      .find(query)
-      .sort({ createdAt: -1 })
-      .toArray();
-
-    res.send(result);
-  } catch (error) {
-    console.error("Error fetching imports:", error);
-    res.status(500).send({ error: "Failed to fetch imported products" });
-  }
+  const email = req.query.email;
+  const query = email ? { email } : {};  // ✅ filter by email if present
+  const result = await importsCollection.find(query).sort({ createdAt: -1 }).toArray();
+  res.send(result);
 });
 
 
-// Add a new imported product
+//Import Product
 app.post("/imports", async (req, res) => {
-  try {
-    const importData = req.body;
-
-    // ❗Error handling: if empty body → send error
-    if (!importData || Object.keys(importData).length === 0) {
-      return res.status(400).send({ error: "Import data cannot be empty" });
-    }
-
-    const result = await importsCollection.insertOne(importData);
-    res.send(result);
-  } catch (error) {
-    console.error("Error adding import:", error);
-    res.status(500).send({ error: "Failed to add import" });
-  }
+  const importData = req.body;
+  const result = await importsCollection.insertOne(importData);
+  res.send(result);
 });
+
 
 
 
