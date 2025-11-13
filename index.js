@@ -121,7 +121,7 @@ app.patch("/products/:id", async (req, res) => {
       });
     }
 
-    // 🧠 Case 2: Update product details (title, price, etc.)
+    //  Case 2: Update product details (title, price, etc.)
     const result = await productCollection.updateOne(
       { _id: new ObjectId(id) },
       { $set: updateData }
@@ -156,19 +156,43 @@ app.patch("/products/:id", async (req, res) => {
 
 //Import 
 
+// Get all imported products (with optional email filter)
 app.get("/imports", async (req, res) => {
-  const email = req.query.email;
-  const query = email ? { email } : {};  // ✅ filter by email if present
-  const result = await importsCollection.find(query).sort({ createdAt: -1 }).toArray();
-  res.send(result);
+  try {
+    const email = req.query.email;
+
+    // If email exists → filter by email, else → return all
+    const query = email ? { email } : {};
+
+    const result = await importsCollection
+      .find(query)
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching imports:", error);
+    res.status(500).send({ error: "Failed to fetch imported products" });
+  }
 });
 
 
-//Import Product
+// Add a new imported product
 app.post("/imports", async (req, res) => {
-  const importData = req.body;
-  const result = await importsCollection.insertOne(importData);
-  res.send(result);
+  try {
+    const importData = req.body;
+
+    // ❗Error handling: if empty body → send error
+    if (!importData || Object.keys(importData).length === 0) {
+      return res.status(400).send({ error: "Import data cannot be empty" });
+    }
+
+    const result = await importsCollection.insertOne(importData);
+    res.send(result);
+  } catch (error) {
+    console.error("Error adding import:", error);
+    res.status(500).send({ error: "Failed to add import" });
+  }
 });
 
 
@@ -177,18 +201,11 @@ app.post("/imports", async (req, res) => {
 
 
 
-
-// Delete an imported product using its ID
+// Delete import product by ID
 app.delete("/imports/:id", async (req, res) => {
   const id = req.params.id;
-
-  // Build a query to match the document by its ObjectId
   const query = { _id: new ObjectId(id) };
-
-  // Remove the matching import from the database
   const result = await importsCollection.deleteOne(query);
-
-  // Send back the delete result
   res.send(result);
 });
 
