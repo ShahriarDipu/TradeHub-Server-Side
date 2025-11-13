@@ -46,18 +46,8 @@ async function run() {
 
 app.get('/products', async (req, res) => {
   const email = req.query.email;
-
-  // If an email is provided, filter by that email.
-  // Otherwise, return all products.
   const query = email ? { email } : {};
-
-  // Fetch products from the database,
-  // newest ones first (sorted by createdAt)
-  const products = await productCollection
-    .find(query)
-    .sort({ createdAt: -1 })
-    .toArray();
-
+  const products = await productCollection.find(query).sort({ createdAt: -1 }).toArray();
   res.send(products);
 });
 
@@ -188,11 +178,17 @@ app.post("/imports", async (req, res) => {
 
 
 
-// Delete import product by ID
+// Delete an imported product using its ID
 app.delete("/imports/:id", async (req, res) => {
   const id = req.params.id;
+
+  // Build a query to match the document by its ObjectId
   const query = { _id: new ObjectId(id) };
+
+  // Remove the matching import from the database
   const result = await importsCollection.deleteOne(query);
+
+  // Send back the delete result
   res.send(result);
 });
 
