@@ -142,8 +142,15 @@ app.patch("/products/:id", async (req, res) => {
 })
 
 
+// app.get("/imports", async (req, res) => {
+//   const result = await importsCollection.find().toArray();
+//   res.send(result);
+// });
+
 app.get("/imports", async (req, res) => {
-  const result = await importsCollection.find().toArray();
+  const email = req.query.email;
+  const query = email ? { email } : {};  // ✅ filter by email if present
+  const result = await importsCollection.find(query).sort({ createdAt: -1 }).toArray();
   res.send(result);
 });
 
